@@ -23,6 +23,7 @@
 \usepackage{multimedia}
 \usepackage{standalone}
 \usepackage{csquotes}
+\usepackage[outputdir=build]{minted}
 
 % This command allows to reset the footnote to include e.g. a customized copyright reference
 % and still include the slide numbers in the original format
@@ -53,12 +54,56 @@
 
 \addbibresource{bib.bib}
 
+
+
+% Acronyms. See: http://mirrors.ibiblio.org/CTAN/macros/latex/contrib/acro/acro_en.pdf
+\usepackage{acro}
+\acsetup{make-links}
+
+
+\DeclareAcronym{ml}{
+  short = ML,
+  long = Machine Learning,
+}
+\DeclareAcronym{plos}{
+  short = PLOS,
+  long = Public Library of Science,
+}
+\DeclareAcronym{icml}{
+  short = ICML,
+  long = International Conference on Machine Learning,
+}
+\DeclareAcronym{neurips}{
+  short = NeurIPS,
+  long = Conference on Neural Information Processing Systems,
+}
+\DeclareAcronym{pip}{
+  short = pip,
+  long = package installer for Python,
+}
+\DeclareAcronym{pypa}{
+  short = PyPA,
+  long = Python Packaging Authority,
+}
+\DeclareAcronym{pmlr}{
+    short = PMLR,
+    long = Proceedings of Machine Learning Research
+}
+\DeclareAcronym{iclr}{
+    short = ICLR,
+    long = International Conference on Learning Representations
+}
+\DeclareAcronym{pep}{
+    short = PEP,
+    long = Python Enhancement Proposal
+}
+
 \usetheme{metropolis}           % Use metropolis theme
 \setbeamertemplate{caption}[default]
-\title{Foundations of Machine Learning in Python}
+\title{Supervising software projects.}
 \date{\today}
-\institute{Uni Bonn}
-\author{the authors}
+\institute{HPCA-Lab, Universität Bonn}
+\author{Moritz Wolter}
 
 \titlegraphic{\includegraphics[width=2.00cm]{UNI_Bonn_Logo_Standard_RZ.pdf}}
 \begin{document}
@@ -67,25 +112,153 @@
     \begin{frame}
     \frametitle{Overview} 
     \tableofcontents
+    \end{frame}
+    
 
-    \note{TODO}
+    \begin{frame}{Motivation}
+      \begin{itemize}
+        \item Software engineering protects us from critical faliures and bugs.
+        \item In 2024 for example, a failure to test software caused rougly 8.5 million Microsoft Windows operating systems to crash worldwide, causing global disruption of critical services
+        during the CrowdStrike-related IT outages.
+        \item We are in science, we need to be able to reproduce our and others results.
+      \end{itemize}
     \end{frame}
 
-    \section{Section 1}
-    \begin{frame}{Slide 1}
-        \begin{figure}
-            \caption{caption}
-        \end{figure}
-    \note{TODO}
+    \begin{frame}[fragile]{Motivation 2, example from science}
+      Lets play with \url{https://simpleitk.org/}, a standard library for medical image processing,
+      by opening a DICOM series from the ProstateX dataset.
+      \begin{minted}{python}
+        >>> import SimpleITK as sitk
+        >>> import numpy as np
+        >>> reader = sitk.ImageSeriesReader()
+        >>> files = reader.GetGDCMSeriesFileNames(
+          './1.3.6.1.4.1.14519.5.2.1.7311.5101.972587624360040843943663321466')
+        >>> reader.SetFileNames(files)
+        >>> image = reader.Execute()
+        >>> image.GetSize()
+        (384, 384, 19)
+        >>> sitk.GetArrayFromImage(image).shape
+        (19, 384, 384)
+      \end{minted}
+    \end{frame}
+
+    \begin{frame}{Motivation}
+      \begin{itemize}
+        \item Numerous projects rely on the current implementation of \texttt{sitk}.
+        \item $\rightarrow$ Software engineering protects the sanity of ourselves and those around us.
+        \item $\rightarrow$ Bugs in test code can invalidate the results of entire projects. They lead to wasted time and embarrassing retractions.
+      \end{itemize}
+    \end{frame}
+
+    \begin{frame}{Why Python}
+      \begin{figure}
+        \includestandalone[width=0.4\textwidth]{figures/uses_python}
+        \includestandalone[width=0.4\textwidth]{figures/ml_in_2024_uses_python}
+        \caption{(left) Python use at the international conference of machine learning (ml) over time.
+                 (right) python use of works linked at major 2024 ml conferences.}
+      \end{figure}
     \end{frame}
 
 
-    \section{Section 2}
-    \begin{frame}{Frame 2}
-        \cite{dumoulin2016guide}
+    \section{Existing best practices}
+    \begin{frame}{Software engineering best practices}
+      \begin{itemize}
+        \item Version control
+        \item Documenting requirements
+        \item Systematic testing
+        \item Packaging code
+        \item Continuous integration
+      \end{itemize}
+
     \end{frame}
 
-    \begin{frame}{Literature}
+    \begin{frame}{Version control}
+      \begin{itemize}
+        \item Version control is a must for any software project.
+        \item The university of Bonn for example provides a GitLab instance for students and employees
+        at \url{https://gitlab.uni-bonn.de/}.
+        \item Ask you students to share projects links with you.
+        \item Next we will discuss what to look for in a repository.
+      \end{itemize}
+    \end{frame}
+
+    \begin{frame}[fragile]{Documenting requirements}
+    \begin{itemize}
+      \item With PyTorch, for example, \enquote{reproducible results are not guaranteed across PyTorch releases, individual commits, or different platforms} \cite{PyTorch2024randomness}.
+    The same is true for most of the software-world, really.
+    For reproducibility, it is important to document the software environment.
+    
+      \item With the \acf{pip},
+    \begin{minted}{bash}
+        pip freeze > requirements.txt
+    \end{minted}
+      does the trick,
+    \item recommend
+    \begin{minted}{bash}
+        conda env export > environment.yml
+    \end{minted}
+    to people using conda.
+    \end{itemize}
+    \end{frame}
+
+
+    \begin{frame}{Systematic testing}
+      \begin{itemize}
+        \item Ask your students to follow a systematic testing approach.
+      Python projects should have a \texttt{src} and \texttt{tests}-folder \cite{packaging2025python}.
+        \item We want tests to run automatically. Point people towards \texttt{pytest}
+      \cite{pytest2025docs} or \texttt{unittest} \cite{unittest2025pythondocs}.
+        \item Run tests in containers recommend Nox \cite{nox2025docs} or 
+      Tox \cite{tox2025docs}.
+     \end{itemize}
+    \end{frame}
+
+    \begin{frame}{Packaging}
+      \begin{itemize}
+        \item Packaging allows others to install code automatically.
+      Ultimately packaging is about reducing code duplication, by
+      making code installable via a Python \texttt{import} statement.
+        \item It requires us to structure our code and to create a \texttt{pyproject.toml} file.
+        \item Asks you students to read: Packaging Python-Projects
+      from the Python-Packaging-Authority~\cite{packaging2025python}.
+    \end{itemize}
+    \end{frame}
+
+    \begin{frame}{Automatic workflows}
+      \begin{itemize}
+        \item Programm a server to run tests automatically.
+        \item This is a part of what people describe as continuous integration.
+        \item It helps teams by getting the computer to tell members when they break something.
+      \end{itemize}
+      It typically requires us to write a single configuration file.
+    \end{frame}
+
+    \section{Adpotion in Machine Learning reserach}
+    \begin{frame}{Best Practice adoption in Machine Learning research}
+      Most of the aforementioned best practices are required by the Neurips-Code guide \cite{NeuripsCodeguide}.
+      \begin{figure}
+        \centering
+        \includestandalone[width=0.4\textwidth]{figures/ml_in_2024_license_and_readme}
+        \includestandalone[width=0.4\textwidth]{figures/ml_in_2024_requirements}
+        \includestandalone[width=0.4\textwidth]{figures/ml_in_2024_packaging}
+        \includestandalone[width=0.4\textwidth]{figures/ml_in_2024_tests}
+      \end{figure}
+    \end{frame}
+
+
+    \section{Conclusion}
+    \begin{frame}{Conclusion}
+        \begin{itemize}
+            \item When done well software engineering makes everyones lives easer.
+            \item We get to reuse our own code more easily.
+            \item Others get to use our code, we reach more people and create more impact.
+            \item We protect ourselfs from emberrasing retractions.
+            \item By training networks on tested preprocessing pipelines we reduce waste.
+            \item Continuous integration protects team members from bugs created elsewhere.
+        \end{itemize}
+    \end{frame}
+
+    \begin{frame}[allowframebreaks]{Literature}
       \printbibliography
     \end{frame}
 
